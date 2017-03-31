@@ -23,7 +23,7 @@ Description of change :Forked From
 //-----------------VARIABLE DEFINITIONS-----------------------
 //def nexusRepoHostPort = nexusRepositoryHost    /*(NEEDS TO BE DEFINED)*/
 //def nexusRepo = nexusRepository                /*(NEEDS TO BE DEFINED)*/
-def nexusRepoHostPort = "https://172.19.74.230:8081"    
+def nexusRepoHostPort = "https//172.19.74.230:8081"    
 def nexusRepo = "MEC"                
 //------------------------------------------------------------
 
@@ -35,8 +35,8 @@ node {
   echo "SCM Pass    : ${scmPassword}"
   echo "HTTP Proxy  : ${httpProxy}"
   echo "HTTPS Proxy : ${httpsProxy}"
-  echo "Nexus Host & Port  :${nexusRepositoryHost}"  /*(NEEDS TO BE DEFINED)*/
-  echo "Nexus Repo Name    :${nexusRepository}"      /*(NEEDS TO BE DEFINED)*/
+  echo "Nexus Host & Port  :${nexusRepoHostPort}"  /*(NEEDS TO BE DEFINED)*/
+  echo "Nexus Repo Name    :${nexusRepo}"      /*(NEEDS TO BE DEFINED)*/
 
 // ---- Source Shell
 // REMOVE THIS BLOCK IF INPUTS ARE TAKEN FROM NODE
@@ -248,5 +248,6 @@ if (testModuleSeperated) {
   //Nexus 3
   nexusArtifactUploader artifacts: [[artifactId: "${env.JOB_NAME}", classifier: '', file: 'artifacts.tar.gz', type: 'gzip']], credentialsId: 'Nexus', groupId: 'org.jenkins-ci.main.mec', nexusUrl: nexusRepoHostPort, nexusVersion: 'nexus3', protocol: 'http', repository: nexusRepo,version: "${env.BUILD_NUMBER}"
   sh 'rm Nexus.txt'    
-  //Dirty solution ends  }
+  //Dirty solution ends 
+  }
 }

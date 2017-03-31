@@ -1,91 +1,113 @@
+/***********************************************************************
+                         Aricent Technologies Proprietary
+ 
+This source code is the sole property of Aricent Technologies. Any form of utilization
+of this source code in whole or in part is  prohibited without  written consent from
+Aricent Technologies
+ 
+File Name			  :Jenkinsfile
+Principal Author	  :PRAVEEN KUMAR KRISHNAMOORTHY
+Subsystem Name        :Jenkins Pipeline Study
+Module Name           :
+Date of First Release : Feb 25, 2017
+Author                :PRAVEEN KUMAR KRISHNAMOORTHY
+Description           :This is a sample program to study Continous Integration
+Version               :1.0
+Date(DD/MM/YYYY)      :Feb 25, 2017
+Modified by           : PRAVEEN KUMAR KRISHNAMOORTHY
+Description of change :Forked From 
+ 
+***********************************************************************/
 //TODO - Make SVN and GIT Checkout steps perfect with Jenkins way. Do not use Shell way.
 node {
-  echo "Parameters"
-  echo "SCM Type: ${scmSourceRepo}"
-  echo "SCM Path: ${scmPath}"
-  echo "SCM User: ${scmUsername}"
-  echo "SCM Pass: ${scmPassword}"
-  echo "HTTP Proxy: ${httpProxy}"
-  echo "HTTPS Proxy: ${httpsProxy}"
+  echo "Parameter List"
+  echo "SCM Type    : ${scmSourceRepo}"
+  echo "SCM Path    : ${scmPath}"
+  echo "SCM User    : ${scmUsername}"
+  echo "SCM Pass    : ${scmPassword}"
+  echo "HTTP Proxy  : ${httpProxy}"
+  echo "HTTPS Proxy : ${httpsProxy}"
   
-//  sh "export OS_PROJECT_DOMAIN_NAME=default"
-//  sh "export OS_USER_DOMAIN_NAME=default"
+// ---- Source Shell
   sh "export OS_PROJECT_NAME=admin"
   sh "export OS_USERNAME=admin"
-//  sh "export OS_PASSWORD=password"
   sh "export OS_PASSWORD=abc123"
   sh "export OS_AUTH_URL=http://172.19.74.169:35357/v2"
-//  sh "export OS_AUTH_URL=http://172.19.74.170/v3"
   sh "export OS_IDENTITY_API_VERSION=2"
   sh "export OS_IMAGE_API_VERSION=2"
   
-  //--------------------------------------
-  //To escape all Special Charecters in a given input string password
+//--------------------------------------
+//To escape all Special Charecters in a given input string Username
   def pwdstr = scmPassword
-  scmPassword = pwdstr.replaceAll( /([^a-zA-Z0-9])/, '\\\\$1' )
-  
   def usrstr = scmUsername
+  scmPassword = pwdstr.replaceAll( /([^a-zA-Z0-9])/, '\\\\$1' )
   scmUsername = usrstr.replaceAll( /([^a-zA-Z0-9])/, '\\\\$1' )
-  
+//To escape all Special Charecters in a given input string Username  
   def pwdstr2 = scmPassword
   def usrstr2 = scmUsername
   scmPassword = pwdstr2.replaceAll( /([@])/, '%40' )
   scmUsername = usrstr2.replaceAll( /([@])/, '%40' ) 
-  //----------------------------------------
-  
-
-  stage('Code Pickup') {
+//----------------------------------------
+  stage('Code Pickup')
+  {
     echo "Source Code Repository Type : ${scmSourceRepo}"
     echo "Source Code Repository Path : ${scmPath}"
     
-    if("${scmSourceRepo}".toUpperCase()=='SVN'){
-        //Not a perfect solution. Reimplement with SVN Step or checkout Step
-        sh "svn co --username ${scmUsername} --password ${scmPassword} ${scmPath} ."
+    if("${scmSourceRepo}".toUpperCase()=='SVN')
+    {
+       sh "svn co --username ${scmUsername} --password ${scmPassword} ${scmPath} ."
         
-    } else if("${scmSourceRepo}".toUpperCase()=='GIT' || "${scmSourceRepo}".toUpperCase()=='GITHUB'){
-        //Not a perfect Solution. Reimplement with Git Step or checkout Step
-        if(scmPath.startsWith("ssh://")){
+    }
+    else if("${scmSourceRepo}".toUpperCase()=='GIT' || "${scmSourceRepo}".toUpperCase()=='GITHUB')
+    {
+      if(scmPath.startsWith("ssh://"))
+        {
             scmPath = scmPath.substring(0, scmPath.indexOf("//")+2) + scmUsername + "@" +scmPath.substring(scmPath.indexOf("//")+2, scmPath.length());
-        } else {
+        } else
+        {
             scmPath = scmPath.substring(0, scmPath.indexOf("//")+2) + scmUsername + ":" + scmPassword + "@" +scmPath.substring(scmPath.indexOf("//")+2, scmPath.length());
-        }  
-      
-        //echo "GIT PATH: ${scmPath}"
-        try {
-            //If we use git clone, it will not clone in the same path if we rebuild the pipeline
-            sh 'ls -a | xargs rm -fr'
-        } catch (error) {
         }
-      //  sh " sshpass -p 'abc123' ssh ubuntu@172.19.74.170"
+      echo "GIT PATH: ${scmPath}"
+      try {
+          //If we use git clone, it will not clone in the same path if we rebuild the pipeline
+          sh 'ls -a | xargs rm -fr'
+          } catch (error)
+          {
+          } 
       
-        if(scmPath.startsWith("ssh://")){
-          if(httpsProxy != null && httpProxy!=null && httpsProxy.length()>0 && httpProxy.length()>0){
-            echo "Looks like this Jenkins behind Proxy"
-            sh "export https_proxy=${httpsProxy} && export http_proxy=${httpProxy} && sshpass -p ${scmPassword}   git clone ${scmPath} ."
-          } else {
-            echo "Looks like this Jenkins is not behind Proxy"
-            sh "sshpass -p ${scmPassword}   git clone ${scmPath} ."
-          }            
-        } else {
-            if(httpsProxy != null && httpProxy!=null && httpsProxy.length()>0 && httpProxy.length()>0) {
+      if(scmPath.startsWith("ssh://"))
+          {
+            if(httpsProxy != null && httpProxy!=null && httpsProxy.length()>0 && httpProxy.length()>0)
+            {
+              echo "Looks like this Jenkins behind Proxy"
+              sh "export https_proxy=${httpsProxy} && export http_proxy=${httpProxy} && sshpass -p ${scmPassword}   git clone ${scmPath} ."
+            } else
+            {
+              echo "Looks like this Jenkins is not behind Proxy"
+              sh "sshpass -p ${scmPassword}   git clone ${scmPath} ."
+            }            
+           } 
+      else
+           {
+              if(httpsProxy != null && httpProxy!=null && httpsProxy.length()>0 && httpProxy.length()>0)
+            {
               echo "Looks like this Jenkins behind Proxy"
               sh "export https_proxy=${httpsProxy} && export http_proxy=${httpProxy} && git clone ${scmPath} ."
-            } else {
+            } 
+            else
+            {
               echo "Looks like this Jenkins is not behind Proxy"
               sh "git clone ${scmPath} ."
             }            
-        } 
-        
-        //The below solutions not working with username and password
-        //git "${scmPath}" //Alternate option
-        //checkout scm: [$class:'GitSCM', userRemoteConfigs: [[url: scmPath ]]]
-    } else {
-        error 'Unknown Source code repository. Only GIT and SVN are supported'
+           } 
+    }
+    else
+    {
+      error 'Unknown Source code repository. Only GIT and SVN are supported'
     }
   } 
-  //---------------------------------------
-  
- //BUILD & PACKAGE
+//--------------------------------------  
+//BUILD & PACKAGE
 def appModuleSeperated = fileExists 'app'
 def testModuleSeperated = fileExists 'test'
 def appPath = ''
@@ -120,27 +142,46 @@ if (testModuleSeperated) {
 //BUILD & PACKING
   //---------------------------------------
   if("${stage}".toUpperCase() == 'VALIDATE') {
-    echo "Running packer validate on : ${distPackerFile}"
-//    sh "packer -v "
-    sh "packer validate ${distPackerFile}"
-  
+    echo 'It is inferred that the package is a validate only application'
+    stage('VALIDATE')
+      {
+        echo "Running packer validate on : ${distPackerFile}"
+        echo "packer is being validated in" 
+        sh "packer -v || packer validate ${distPackerFile}"
+      }
   }
-  if("${stage}".toUpperCase() == 'BUILD') {
-    echo 'It is inferred that the package is a Build application , hence it has to be validated , built and moved to a temporary repository'
-      stage('BUILD') {
-        echo "Running packer validate on : ${distPackerFile}"
+  if("${stage}".toUpperCase() == 'BUILD') 
+  {
+    echo 'It is inferred that the package is a Build application , hence it has to be validated and built'
+    stage('VALIDATE')
+      {
+        echo "Validating the template :${distPackerFile}"
         sh "packer validate ${distPackerFile}"
-        sh "packer build ${distPackerFile}"
-    }   
-  }  else if ("${stage}".toUpperCase() == 'TEST'){
-    echo 'It is inferred that the package is a test application , hence it has to be moved to a provisioned with a runtime sandbox environment , validate , build and tested before pushing into repo'
-        stage('TEST') {
-        echo "Running packer validate on : ${distPackerFile}"
-        sh "packer validate ${distPackerFile}"
+      }
+    stage('BUILD')
+      {
+        echo "Building using packerfile :${distPackerFile}"
         sh "packer build ${distPackerFile}"
       }   
+  }  else if ("${stage}".toUpperCase() == 'TEST')
+  {
+    echo 'It is inferred that the package is a test application , hence it has to be moved to a provisioned with a runtime sandbox environment , validate , build and tested before pushing into repo'
+    stage('VALIDATE')
+      {
+        echo "Validating the template :${distPackerFile}"
+        sh "packer validate ${distPackerFile}"
+      }
+    stage('BUILD')
+      {
+        echo "Building using packerfile :${distPackerFile}"
+        sh "packer build ${distPackerFile}"
+      }   
+    stage('TEST')
+     {
+// TESTS IF PRESENT COMES UNDER THIS SECTION
+     }   
   }
-
+  
 //END OF IMAGE PUSHING INTO REPOSITORY
 // NEXUS UPDATE
   stage('Publish Jenkins Output to Nexus'){

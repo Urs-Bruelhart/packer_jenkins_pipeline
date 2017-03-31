@@ -19,6 +19,12 @@ Description of change :Forked From
  
 ***********************************************************************/
 //TODO - Make SVN and GIT Checkout steps perfect with Jenkins way. Do not use Shell way.
+
+//-----------------VARIABLE DEFINITIONS-----------------------
+def nexusRepoHostPort = nexusRepositoryHost
+def nexusRepo = nexusRepository
+//------------------------------------------------------------
+
 node {
   echo "Parameter List"
   echo "SCM Type    : ${scmSourceRepo}"
@@ -27,7 +33,9 @@ node {
   echo "SCM Pass    : ${scmPassword}"
   echo "HTTP Proxy  : ${httpProxy}"
   echo "HTTPS Proxy : ${httpsProxy}"
-  
+  echo "Nexus Host & Port  :${nexusRepositoryHost}"
+  echo "Nexus Repo Name    :${nexusRepository}"  
+
 // ---- Source Shell
   sh "export OS_PROJECT_NAME=admin"
   sh "export OS_USERNAME=admin"
@@ -107,7 +115,9 @@ node {
     }
   } 
 //--------------------------------------  
-//BUILD & PACKAGE
+// INITIALIZING
+  stage ('Initialization')
+{
 def appModuleSeperated = fileExists 'app'
 def testModuleSeperated = fileExists 'test'
 def appPath = ''
@@ -135,49 +145,66 @@ if (testModuleSeperated) {
   }
 // COPYING APP Directory to Current Working Directory
   def appWorkingDir = (appPath=='') ? '.' : appPath.substring(0, appPath.length()-1)  
+
 // NEXUS file for Time Stamp comparison. This file is used for comparing time stamps and differentiating input files from generated output files.        
-    sh 'echo Nexus>Nexus.txt'
+//TODO - Tune it later. Dirty solution to identify the Jenkins generated artifacts for Nexus
+        sh 'echo Nexus>Nexus.txt'
+  //Dirty solution ends.
+}
 //END OF INITIALIZING.
 //_______________________________________________________________________________________________________________________________________________________________________  
 //BUILD & PACKING
   //---------------------------------------
-  if("${stage}".toUpperCase() == 'VALIDATE') {
-    echo 'It is inferred that the package is a validate only application'
-    stage('VALIDATE')
+  if("${stage}".toUpperCase() == 'BUILD') {
+    echo 'The Requested Stage is Build Only,hence successful VM Images will be pushed to Temp Repo'
+    stage('validate')
       {
-        echo "Running packer validate on : ${PackerFile}"
-        echo "packer is being validated in" 
+        echo "Validating the template :${PackerFile}"
         sh "packer -v || packer validate ${PackerFile}"
       }
+    stage('build')
+      {
+        echo "Building using packerfile :${PackerFile}"
+        sh "packer build ${PackerFile}"
+      }
+    stage('test')
+     {
+// TESTS IF PRESENT COMES UNDER THIS SECTION
+     }
   }
-  if("${stage}".toUpperCase() == 'BUILD') 
+  else if("${stage}".toUpperCase() == 'CERTIFY') 
   {
-    echo 'It is inferred that the package is a Build application , hence it has to be validated and built'
-    stage('VALIDATE')
+    echo 'The Requested Stage is Certify,hence successful VM Images will be pushed to Temp Repo and provided with a sandbox for validation'
+    stage('validate')
       {
         echo "Validating the template :${PackerFile}"
         sh "packer -v || packer validate ${PackerFile}"
       }
-    stage('BUILD')
+    stage('build')
       {
         echo "Building using packerfile :${PackerFile}"
         sh "packer build ${PackerFile}"
       }
-    echo "VM Image Built and pushed into openstack-glance repository"
-  }  else if ("${stage}".toUpperCase() == 'TEST')
+    stage('test')
+     {
+// TESTS IF PRESENT COMES UNDER THIS SECTION
+     }
+    echo "VM Image Built and pushed into temp repository and provided with a sandbox"
+  }  
+  else if ("${stage}".toUpperCase() == 'DEPLOY')
   {
-    echo 'It is inferred that the package is a test application , hence it has to be moved to a provisioned with a runtime sandbox environment , validate , build and tested before pushing into repo'
-    stage('VALIDATE')
+    echo 'The Requested Stage is deploy,hence successful VM Images will be pushed to Permanant Repository without validation (sandbox)'
+    stage('validate')
       {
         echo "Validating the template :${PackerFile}"
         sh "packer -v || packer validate ${PackerFile}"
       }
-    stage('BUILD')
+    stage('build')
       {
         echo "Building using packerfile :${PackerFile}"
         sh "packer build ${PackerFile}"
-      }   
-    stage('TEST')
+      }
+    stage('test')
      {
 // TESTS IF PRESENT COMES UNDER THIS SECTION
      }
@@ -186,9 +213,28 @@ if (testModuleSeperated) {
   
 //END OF IMAGE PUSHING INTO REPOSITORY
 // NEXUS UPDATE
-  stage('Publish Jenkins Output to Nexus'){
-        echo 'Publishing the artifacts...';
-        sh 'rm Nexus.txt'
-//NEXUS FLOW ENDS HERE
-  }
+  stage('Publish Jenkins Output to Nexus')
+  {
+  //TODO in code - Tune it later. Dirty solution to identify the Jenkins generated artifacts for Nexus. 
+  //TODO in Jenkins - Needs a Credential with the name "Nexus"
+  //TODO in Nexus web - Created a Hosted Site Repository with the name MEC
+  //TODO - Nexus3 support - Check the Sonatype plugin once released
+  //Nexus is a great component artifact repo. Does not look great dealing with binary documents and intermediate outputs.
+  //The plugin is too weak. It can upload only one file and hence Zipped
+
+    echo 'Publishing the artifacts...';
+      //def PWD = pwd(); //"${PWD}/artifacts.tar.gz"
+      //sh 'find . -type f -newer Nexus.txt -print0 | tar -czvf artifacts.tar.gz --ignore-failed-read --null -T -'
+      //Fixed for archive overlap issue
+      try{
+        sh 'find . -type f -newer Nexus.txt -print0 | tar -zcvf artifacts.tar.gz --ignore-failed-read --null -T -' 
+         } catch(Exception e) {
+         }
+
+  //Nexus 2
+  //nexusArtifactUploader artifacts: [[artifactId: "${env.JOB_NAME}", classifier: '', file: 'artifacts.tar.gz', type: 'gzip']], credentialsId: 'Nexus', groupId: 'org.jenkins-ci.main.mec', nexusUrl: '13.55.146.108:8085/nexus', nexusVersion: 'nexus2', protocol: 'http', repository: 'MEC',version: "${env.BUILD_NUMBER}"
+  //Nexus 3
+	nexusArtifactUploader artifacts: [[artifactId: "${env.JOB_NAME}", classifier: '', file: 'artifacts.tar.gz', type: 'gzip']], credentialsId: 'Nexus', groupId: 'org.jenkins-ci.main.mec', nexusUrl: nexusRepoHostPort, nexusVersion: 'nexus3', protocol: 'http', repository: nexusRepo,version: "${env.BUILD_NUMBER}"
+  sh 'rm Nexus.txt'    
+  //Dirty solution ends  }
 }

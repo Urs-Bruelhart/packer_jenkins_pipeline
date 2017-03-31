@@ -128,8 +128,8 @@ if (testModuleSeperated) {
     testPath = ''
 }
   if (appPath + fileExists("${FileName}")) {
-    echo 'This application contains a single packer file , it is assumed to be developed in compiler in-dependant / interpreter based programming language.'
-    distPackerFile = appPath + "${FileName}"
+    echo "Packer file found at ${appPath}"
+    PackerFile = appPath + "${FileName}"
 } else {
     echo 'Packerfile not found under ' + appPath
   }
@@ -145,9 +145,9 @@ if (testModuleSeperated) {
     echo 'It is inferred that the package is a validate only application'
     stage('VALIDATE')
       {
-        echo "Running packer validate on : ${distPackerFile}"
+        echo "Running packer validate on : ${PackerFile}"
         echo "packer is being validated in" 
-        sh "packer -v || packer validate ${distPackerFile}"
+        sh "packer -v || packer validate ${PackerFile}"
       }
   }
   if("${stage}".toUpperCase() == 'BUILD') 
@@ -155,31 +155,33 @@ if (testModuleSeperated) {
     echo 'It is inferred that the package is a Build application , hence it has to be validated and built'
     stage('VALIDATE')
       {
-        echo "Validating the template :${distPackerFile}"
-        sh "packer validate ${distPackerFile}"
+        echo "Validating the template :${PackerFile}"
+        sh "packer -v || packer validate ${PackerFile}"
       }
     stage('BUILD')
       {
-        echo "Building using packerfile :${distPackerFile}"
-        sh "packer build ${distPackerFile}"
-      }   
+        echo "Building using packerfile :${PackerFile}"
+        sh "packer build ${PackerFile}"
+      }
+    echo "VM Image Built and pushed into openstack-glance repository"
   }  else if ("${stage}".toUpperCase() == 'TEST')
   {
     echo 'It is inferred that the package is a test application , hence it has to be moved to a provisioned with a runtime sandbox environment , validate , build and tested before pushing into repo'
     stage('VALIDATE')
       {
-        echo "Validating the template :${distPackerFile}"
-        sh "packer validate ${distPackerFile}"
+        echo "Validating the template :${PackerFile}"
+        sh "packer -v || packer validate ${PackerFile}"
       }
     stage('BUILD')
       {
-        echo "Building using packerfile :${distPackerFile}"
-        sh "packer build ${distPackerFile}"
+        echo "Building using packerfile :${PackerFile}"
+        sh "packer build ${PackerFile}"
       }   
     stage('TEST')
      {
 // TESTS IF PRESENT COMES UNDER THIS SECTION
-     }   
+     }
+    echo "VM Image Built and pushed into openstack-glance repository"
   }
   
 //END OF IMAGE PUSHING INTO REPOSITORY

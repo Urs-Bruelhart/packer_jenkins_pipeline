@@ -21,8 +21,8 @@ Description of change :Forked From
 //TODO - Make SVN and GIT Checkout steps perfect with Jenkins way. Do not use Shell way.
 
 //-----------------VARIABLE DEFINITIONS-----------------------
-def nexusRepoHostPort = nexusRepositoryHost
-def nexusRepo = nexusRepository
+//def nexusRepoHostPort = nexusRepositoryHost    /*(NEEDS TO BE DEFINED)*/
+//def nexusRepo = nexusRepository                /*(NEEDS TO BE DEFINED)*/
 //------------------------------------------------------------
 
 node {
@@ -33,18 +33,28 @@ node {
   echo "SCM Pass    : ${scmPassword}"
   echo "HTTP Proxy  : ${httpProxy}"
   echo "HTTPS Proxy : ${httpsProxy}"
-  echo "Nexus Host & Port  :${nexusRepositoryHost}"
-  echo "Nexus Repo Name    :${nexusRepository}"  
+//  echo "Nexus Host & Port  :${nexusRepositoryHost}"  /*(NEEDS TO BE DEFINED)*/
+//  echo "Nexus Repo Name    :${nexusRepository}"      /*(NEEDS TO BE DEFINED)*/
 
 // ---- Source Shell
+// REMOVE THIS BLOCK IF INPUTS ARE TAKEN FROM NODE
   sh "export OS_PROJECT_NAME=admin"
   sh "export OS_USERNAME=admin"
   sh "export OS_PASSWORD=abc123"
   sh "export OS_AUTH_URL=http://172.19.74.169:35357/v2"
   sh "export OS_IDENTITY_API_VERSION=2"
   sh "export OS_IMAGE_API_VERSION=2"
-  
-//--------------------------------------
+//------------------------------------------------
+/** ENABLE THIS IF INPUTS ARE TAKEN FROM NODE
+  sh "export OS_PROJECT_NAME=${PROJECT_NAME}"
+  sh "export OS_USERNAME=${USERNAME}"
+  sh "export OS_PASSWORD=${PASSWORD}"
+  sh "export OS_AUTH_URL=${AUTH_URL}"
+  sh "export OS_IDENTITY_API_VERSION=${IDENTITY_API_VERSION}"
+  sh "export OS_IMAGE_API_VERSION=${IMAGE_API_VERSION}"
+**/
+
+//------------------------------------------------
 //To escape all Special Charecters in a given input string Username
   def pwdstr = scmPassword
   def usrstr = scmUsername

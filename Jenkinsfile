@@ -23,6 +23,8 @@ Description of change :Forked From
 //-----------------VARIABLE DEFINITIONS-----------------------
 //def nexusRepoHostPort = nexusRepositoryHost    /*(NEEDS TO BE DEFINED)*/
 //def nexusRepo = nexusRepository                /*(NEEDS TO BE DEFINED)*/
+def nexusRepoHostPort = 172.19.74.230:8081    
+def nexusRepo = MEC                
 //------------------------------------------------------------
 
 node {
@@ -33,8 +35,8 @@ node {
   echo "SCM Pass    : ${scmPassword}"
   echo "HTTP Proxy  : ${httpProxy}"
   echo "HTTPS Proxy : ${httpsProxy}"
-//  echo "Nexus Host & Port  :${nexusRepositoryHost}"  /*(NEEDS TO BE DEFINED)*/
-//  echo "Nexus Repo Name    :${nexusRepository}"      /*(NEEDS TO BE DEFINED)*/
+  echo "Nexus Host & Port  :${nexusRepositoryHost}"  /*(NEEDS TO BE DEFINED)*/
+  echo "Nexus Repo Name    :${nexusRepository}"      /*(NEEDS TO BE DEFINED)*/
 
 // ---- Source Shell
 // REMOVE THIS BLOCK IF INPUTS ARE TAKEN FROM NODE
@@ -244,7 +246,7 @@ if (testModuleSeperated) {
   //Nexus 2
   //nexusArtifactUploader artifacts: [[artifactId: "${env.JOB_NAME}", classifier: '', file: 'artifacts.tar.gz', type: 'gzip']], credentialsId: 'Nexus', groupId: 'org.jenkins-ci.main.mec', nexusUrl: '13.55.146.108:8085/nexus', nexusVersion: 'nexus2', protocol: 'http', repository: 'MEC',version: "${env.BUILD_NUMBER}"
   //Nexus 3
-	nexusArtifactUploader artifacts: [[artifactId: "${env.JOB_NAME}", classifier: '', file: 'artifacts.tar.gz', type: 'gzip']], credentialsId: 'Nexus', groupId: 'org.jenkins-ci.main.mec', nexusUrl: nexusRepoHostPort, nexusVersion: 'nexus3', protocol: 'http', repository: nexusRepo,version: "${env.BUILD_NUMBER}"
+  nexusArtifactUploader artifacts: [[artifactId: "${env.JOB_NAME}", classifier: '', file: 'artifacts.tar.gz', type: 'gzip']], credentialsId: 'Nexus', groupId: 'org.jenkins-ci.main.mec', nexusUrl: nexusRepoHostPort, nexusVersion: 'nexus3', protocol: 'http', repository: nexusRepo,version: "${env.BUILD_NUMBER}"
   sh 'rm Nexus.txt'    
   //Dirty solution ends  }
 }

@@ -23,7 +23,7 @@ Description of change :Forked From
 //-----------------VARIABLE DEFINITIONS-----------------------
 //def nexusRepoHostPort = nexusRepositoryHost    /*(NEEDS TO BE DEFINED)*/
 //def nexusRepo = nexusRepository                /*(NEEDS TO BE DEFINED)*/
-def nexusRepoHostPort = "https//172.19.74.230:8081"    
+def nexusRepoHostPort = "172.19.74.230:8081"    
 def nexusRepo = "MEC"                
 //------------------------------------------------------------
 
